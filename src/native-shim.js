@@ -1,3 +1,11 @@
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /**
  * @license
  * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -58,51 +66,51 @@
  *  Compiling valid class-based custom elements to ES5 will satisfy these
  *  requirements with the latest version of popular transpilers.
  */
-(() => {
+(function () {
   'use strict';
 
   // Do nothing if `customElements` does not exist.
+
   if (!window.customElements) return;
 
-  const NativeHTMLElement = window.HTMLElement;
-  const nativeDefine = window.customElements.define;
-  const nativeGet = window.customElements.get;
+  var NativeHTMLElement = window.HTMLElement;
+  var nativeDefine = window.customElements.define;
+  var nativeGet = window.customElements.get;
 
   /**
    * Map of user-provided constructors to tag names.
    *
    * @type {Map<Function, string>}
    */
-  const tagnameByConstructor = new Map();
+  var tagnameByConstructor = new Map();
 
   /**
    * Map of tag names to user-provided constructors.
    *
    * @type {Map<string, Function>}
    */
-  const constructorByTagname = new Map();
-
+  var constructorByTagname = new Map();
 
   /**
    * Whether the constructors are being called by a browser process, ie parsing
    * or createElement.
    */
-  let browserConstruction = false;
+  var browserConstruction = false;
 
   /**
    * Whether the constructors are being called by a user-space process, ie
    * calling an element constructor.
    */
-  let userConstruction = false;
+  var userConstruction = false;
 
-  window.HTMLElement = function() {
+  window.HTMLElement = function () {
     if (!browserConstruction) {
-      const tagname = tagnameByConstructor.get(this.constructor);
-      const fakeClass = nativeGet.call(window.customElements, tagname);
+      var tagname = tagnameByConstructor.get(this.constructor);
+      var fakeClass = nativeGet.call(window.customElements, tagname);
 
       // Make sure that the fake constructor doesn't call back to this constructor
       userConstruction = true;
-      const instance = new (fakeClass)();
+      var instance = new fakeClass();
       return instance;
     }
     // Else do nothing. This will be reached by ES5-style classes doing
@@ -116,29 +124,37 @@
   // ptototype chain of built-in elements.
   window.HTMLElement.prototype = NativeHTMLElement.prototype;
 
-  const define = (tagname, elementClass) => {
-    const elementProto = elementClass.prototype;
-    const StandInElement = class extends NativeHTMLElement {
-      constructor() {
-        // Call the native HTMLElement constructor, this gives us the
-        // under-construction instance as `this`:
-        super();
+  var define = function define(tagname, elementClass) {
+    var elementProto = elementClass.prototype;
+    var StandInElement = function (_NativeHTMLElement) {
+      _inherits(StandInElement, _NativeHTMLElement);
+
+      function StandInElement() {
+        _classCallCheck(this, StandInElement);
 
         // The prototype will be wrong up because the browser used our fake
         // class, so fix it:
-        Object.setPrototypeOf(this, elementProto);
+        var _this = _possibleConstructorReturn(this, (StandInElement.__proto__ || Object.getPrototypeOf(StandInElement)).call(this));
+        // Call the native HTMLElement constructor, this gives us the
+        // under-construction instance as `this`:
+
+
+        Object.setPrototypeOf(_this, elementProto);
 
         if (!userConstruction) {
           // Make sure that user-defined constructor bottom's out to a do-nothing
           // HTMLElement() call
           browserConstruction = true;
           // Call the user-defined constructor on our instance:
-          elementClass.call(this);
+          elementClass.call(_this);
         }
         userConstruction = false;
+        return _this;
       }
-    };
-    const standInProto = StandInElement.prototype;
+
+      return StandInElement;
+    }(NativeHTMLElement);
+    var standInProto = StandInElement.prototype;
     StandInElement.observedAttributes = elementClass.observedAttributes;
     standInProto.connectedCallback = elementProto.connectedCallback;
     standInProto.disconnectedCallback = elementProto.disconnectedCallback;
@@ -150,15 +166,13 @@
     nativeDefine.call(window.customElements, tagname, StandInElement);
   };
 
-  const get = (tagname) => constructorByTagname.get(tagname);
+  var get = function get(tagname) {
+    return constructorByTagname.get(tagname);
+  };
 
   // Workaround for Safari bug where patching customElements can be lost, likely
   // due to native wrapper garbage collection issue
-  Object.defineProperty(window, 'customElements',
-    {value: window.customElements, configurable: true, writable: true});
-  Object.defineProperty(window.customElements, 'define',
-    {value: define, configurable: true, writable: true});
-  Object.defineProperty(window.customElements, 'get',
-    {value: get, configurable: true, writable: true});
-
+  Object.defineProperty(window, 'customElements', { value: window.customElements, configurable: true, writable: true });
+  Object.defineProperty(window.customElements, 'define', { value: define, configurable: true, writable: true });
+  Object.defineProperty(window.customElements, 'get', { value: get, configurable: true, writable: true });
 })();
